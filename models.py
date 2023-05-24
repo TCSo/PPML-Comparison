@@ -10,9 +10,25 @@ import matplotlib.pyplot as plt
 
 '''
 Defining several common model for testing. 
+SingleNet: SLP with 1 hidden layer. 
 SimpleNet: MLP with 2 hidden layers.  
 ConvNet: Convolutional NN with 2 convolutional layers and one FC layer. 
 '''
+class SingleNet(nn.Module):
+    '''an SLP'''
+    def __init__(self, n_hidden = 100, batch_size = 200) -> None:
+        super().__init__()
+        self.batch_size = batch_size
+        self.fc1 = nn.Linear(in_features=784, out_features=n_hidden)
+        self.fc2 = nn.Linear(in_features=n_hidden, out_features=10)
+
+    def forward(self, x):
+        x = x.view(-1, 784)
+        x = self.fc1(x)
+        x = torch.relu(x)
+        x = self.fc2(x)
+        return x
+
 class SimpleNet(nn.Module):
     '''Simple MLP'''
     def __init__(self, n_hidden = 100, batch_size = 200) -> None:
@@ -172,8 +188,12 @@ def train(model, num_epochs=10, lr=1e-3):
     # plt.show()
     return all_train_losses, all_val_losses
 
+slp_model = SingleNet()
 mlp_model = SimpleNet()
-train_loss, val_loss = train(model=mlp_model, num_epochs=15)
+
+train(model=slp_model, num_epochs=10)
+train(model=mlp_model, num_epochs=10)
+
 
 # Testing for performance
 # test_loss = 0
@@ -193,10 +213,24 @@ from interfering with inferences.
 
 Export the model to onnx format. 
 '''
+slp_model.eval()
 mlp_model.eval()
 # Random input to trace the flow in the model 
 x = torch.randn(1, 1, 28, 28, requires_grad=True)
+torch_out = slp_model(x)
 torch_out = mlp_model(x)
+
+# Export the model
+torch.onnx.export(slp_model,                     # model
+                  x,                         # example input for tracing
+                  "slp.onnx",   # output file
+                  export_params=True,        # store the trained parameter weights inside the model file
+                  opset_version=14,          # the ONNX version to export the model to
+                  do_constant_folding=True,  # whether to execute constant folding for optimization
+                  input_names = ['input'],   # the model's input names
+                  output_names = ['output'], # the model's output names
+                  dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
+                                'output' : {0 : 'batch_size'}})
 
 # Export the model
 torch.onnx.export(mlp_model,                     # model
@@ -226,6 +260,9 @@ Visualize some examples to make sure that the model is running properly.
 '''
 Checking the validity of the output models. 
 '''
+onnx_model = onnx.load("slp.onnx")
+onnx.checker.check_model(onnx_model)
+
 onnx_model = onnx.load("mlp.onnx")
 onnx.checker.check_model(onnx_model)
 
@@ -244,6 +281,6 @@ with open("input.npy", 'rb') as f:
     a = np.load(f, allow_pickle=True)
     a = torch.from_numpy(a)
     print(a.shape)
-    prediction = mlp_model(a)
+    prediction = slp_model(a)
     print(prediction)
 
