@@ -231,7 +231,7 @@ onnx.checker.check_model(onnx_model)
 
 '''
 Generate testing inputs and outputs for the PPML frameworks, using the first
-200 testing data points. 
+200 testing data points. (NOT USED: 200 DATA POINT IS TOO SLOW FOR FHE EVALUATION)
 '''
 input_batch, output_batch = dataset.get_batch(0, 'test')
 with open("input0.npy", 'xb') as f:
