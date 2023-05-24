@@ -20,11 +20,11 @@ he-man-setup:
 	cd he-man-concrete ; pip install argparse pathlib numpy tqdm ; RUSTFLAGS="-C target-cpu=native" cargo build --release ; \
 
 he-man-eval: 
-	cp $(MAKEFILE_LOC)/mlp.onnx $(THIRD_PARTY_LOC)/he-man-concrete/demo/ ; cd $(THIRD_PARTY_LOC)/he-man-concrete ; \
-	target/release/he-man-concrete keyparams demo/mlp.onnx demo/calibration-data.zip demo/keyparams.json demo/mlp_calibrated.onnx ; \
-	target/release/he-man-concrete keygen demo/keyparams.json demo/ ; target/release/he-man-concrete encrypt demo/ demo/input.npy demo/input.enc ; \
-	target/release/he-man-concrete inference demo/ demo/mlp_calibrated.onnx demo/input.enc demo/result.enc ; \
-	target/release/he-man-concrete decrypt demo/ demo/result.enc demo/result.npy ; 
+	cp $(MAKEFILE_LOC)/mlp.onnx $(THIRD_PARTY_LOC)/he-man-concrete/ ; cd $(THIRD_PARTY_LOC) ; \
+	bin/he-man-concrete keyparams he-man-concrete/mlp.onnx he-man-concrete/calibration-data.zip he-man-concrete/keyparams.json he-man-concrete/mlp_calibrated.onnx ; \
+	bin/he-man-concrete keygen he-man-concrete/keyparams.json demo/ ; bin/he-man-concrete encrypt he-man-concrete/ he-man-concrete/input.npy he-man-concrete/input.enc ; \
+	bin/he-man-concrete inference he-man-concrete/ he-man-concrete/mlp_calibrated.onnx he-man-concrete/input.enc he-man-concrete/result.enc ; \
+	bin/he-man-concrete decrypt he-man-concrete/ he-man-concrete/result.enc he-man-concrete/result.npy ; 
 
 clean: 
 	rm -f $(FILES_TO_REMOVE)
