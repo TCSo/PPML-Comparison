@@ -8,8 +8,7 @@ MODELS = slp.onnx mlp.onnx
 # Paths:
 THIRD_PARTY_LOC = $(MAKEFILE_LOC)/thirdparty
 
-# all: clean models he-man-eval concrete-eval stats
-all: clean models concrete-eval stats
+all: clean models he-man-eval concrete-eval stats
 
 setup: he-man-setup 
 
@@ -26,7 +25,7 @@ he-man-eval:
 	target/release/he-man-concrete keyparams demo/slp.onnx demo/calibration-data.zip demo/keyparams.json demo/slp_calibrated.onnx ; \
 	target/release/he-man-concrete keygen demo/keyparams.json demo/ ; target/release/he-man-concrete encrypt demo/ demo/input.npy demo/input.enc ; \
 	target/release/he-man-concrete inference demo/ demo/slp_calibrated.onnx demo/input.enc demo/result.enc ; \
-	target/release/he-man-concrete decrypt demo/ demo/result.enc demo/result.npy ; cd $(MAKEFILE_LOC) ; $(PYTHON) stats.py ; \
+	target/release/he-man-concrete decrypt demo/ demo/result.enc demo/result.npy ; cd $(MAKEFILE_LOC) ; \
 	cd $(MAKEFILE_LOC) ;
 
 concrete-eval:
