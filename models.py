@@ -1,11 +1,9 @@
-import io
 import torch
 import torchvision
 import numpy as np
 import torch.onnx
 import onnx
 from torch import nn 
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 '''
@@ -53,7 +51,7 @@ class ConvNet(nn.Module):
         super(ConvNet, self).__init__()
         self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding='same')
         self.conv2 = nn.Conv2d(8, 16, kernel_size=3, padding='same')
-        img_size = 28
+        img_size = 7
         self.fc1 = torch.nn.Linear(16 * img_size * img_size, 10)
         self.dropout_rate = dropout_rate
 
@@ -61,7 +59,7 @@ class ConvNet(nn.Module):
         x = nn.functional.relu(nn.functional.max_pool2d(self.conv1(x), 2))
         x = nn.functional.relu(nn.functional.max_pool2d(self.conv2(x), 2))
         x = nn.functional.dropout(x, training=self.training, p=self.dropout_rate)
-        img_size = 28
+        img_size = 7
         x = x.view(-1, 16 * img_size * img_size)
         x = nn.functional.relu(self.fc1(x))
         return nn.functional.log_softmax(x, dim=1)
@@ -190,9 +188,14 @@ def train(model, num_epochs=10, lr=1e-3):
 
 slp_model = SingleNet()
 mlp_model = SimpleNet()
+conv_model = ConvNet()
 
+print("\nTraining SLP model: ")
 train(model=slp_model, num_epochs=10)
+print("\nTraining MLP model: ")
 train(model=mlp_model, num_epochs=10)
+print("\nTraining ConvNet model: ")
+train(model=conv_model, num_epochs=10)
 
 
 # Testing for performance
@@ -277,10 +280,22 @@ with open("input0.npy", 'xb') as f:
 with open("label0.npy", 'xb') as f:
     np.save(f, output_batch)
 
+'''
+Save a subset of the training data as calibration data
+'''
+input_batch, output_batch = dataset.get_batch(0, 'train')
+with open("input_calib.npy", 'xb') as f:
+    np.save(f, input_batch)
+
+input = None
+output = None
 with open("input.npy", 'rb') as f:
-    a = np.load(f, allow_pickle=True)
-    a = torch.from_numpy(a)
-    print(a.shape)
-    prediction = slp_model(a)
-    print(prediction)
+    input = np.load(f, allow_pickle=True)
+    input = torch.from_numpy(input)
+    # print(input.shape)
+    output = slp_model(input).detach()
+    # print(output)
+
+with open("output.npy", 'xb') as f:
+    np.save(f, output)
 
